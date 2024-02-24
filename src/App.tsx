@@ -17,9 +17,13 @@ import * as THREE from "three";
 import * as OBC from "openbim-components";
 import { CesiumCamera } from "./cesium-camera";
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import GeocoderSearch from "./GeocoderSearch";
 
 function App() {
+  // Viewer state
+  const [viewer, setViewer] = useState<Viewer | null>(null);
+
   useEffect(() => {
     const container = document.getElementById("cesiumContainer");
     if (!container || container.childNodes.length > 0) {
@@ -47,8 +51,8 @@ function App() {
       viewer.scene.primitives.add(buildingTileset);
 
       // boundaries in WGS84 to help with syncing the renderers
-      const minWGS84 = [-5.996332484651805, 37.388948626088755];
-      const maxWGS84 = [-5.994808990075886, 37.38832634224693];
+      const minWGS84 = [5.315794075329603, 60.391711061245076];
+      const maxWGS84 = [5.317535161714101, 60.391859115239946];
 
       const offset = 0.002; // So that the target is centered in the screen
       const center = Cartesian3.fromDegrees(
@@ -57,15 +61,16 @@ function App() {
         500
       );
 
-      viewer.camera.flyTo({
-        destination: center,
-        orientation: {
-          heading: CesiumMath.toRadians(0),
-          pitch: CesiumMath.toRadians(-60),
-          roll: CesiumMath.toRadians(0),
-        },
-        duration: 3,
-      });
+      // Fly to the center
+      // viewer.camera.flyTo({
+      //   destination: center,
+      //   orientation: {
+      //     heading: CesiumMath.toRadians(0),
+      //     pitch: CesiumMath.toRadians(-60),
+      //     roll: CesiumMath.toRadians(0),
+      //   },
+      //   duration: 5,
+      // });
       // Init Components
       const ThreeContainer = document.getElementById(
         "ThreeContainer"
@@ -133,7 +138,7 @@ function App() {
       const model = await ifcLoader.load(buffer, "example");
       for (const child of model.children) {
         child.rotation.x = Math.PI / 2;
-        child.position.z += 65;
+        child.position.z += 52;
       }
       scene.add(model);
 
@@ -269,12 +274,13 @@ function App() {
         camera.updateProjectionMatrix();
       });
     }
-
+    setViewer(viewer);
     setupViewer().catch(console.error); // Catch and log any errors
   }, []); // Empty dependency array means this effect runs once on mount
 
   return (
     <>
+      <GeocoderSearch viewer={viewer} />
       <div id="cesiumContainer" className="viewer"></div>
       <div id="ThreeContainer" className="untouchable viewer"></div>
     </>
